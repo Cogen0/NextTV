@@ -39,11 +39,11 @@ export default function SearchContent() {
   const enabledSources = videoSources.filter((s) => s.enabled);
   // 稳定的依赖值，避免 Zustand hydration 引用变化触发重复请求
   const enabledSourceKeys = enabledSources.map((s) => s.key).join(",");
-  // 从 URL 参数读取源过滤，默认为第一个激活源
+  // 从 URL 参数读取源过滤，默认不指定源（聚合模式）
   const sourceParam = searchParams.get("source");
   const sourceFilter = sourceParam && enabledSources.some((s) => s.key === sourceParam)
     ? sourceParam
-    : enabledSources.length > 0 ? enabledSources[0].key : "";
+    : "";
 
   const handlePageChange = useCallback(
     (page) => {
@@ -70,6 +70,14 @@ export default function SearchContent() {
     },
     [searchParams, router, clearScrollPosition],
   );
+
+  const handleShowAllSources = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.delete("source");
+    params.delete("page");
+    clearScrollPosition();
+    router.push(`/search?${params.toString()}`);
+  }, [searchParams, router, clearScrollPosition]);
 
   // 持续监听滚动事件，保存滚动位置（防抖）
   // 不能只在 unmount 时保存，因为 Next.js 页面切换时 window.scrollY 可能已被重置为 0
@@ -290,6 +298,16 @@ export default function SearchContent() {
       {query && enabledSources.length > 0 && (
         <div className="w-full overflow-hidden relative">
           <div className="flex gap-3 overflow-x-auto hide-scrollbar py-2 px-1">
+            <button
+              onClick={handleShowAllSources}
+              className={`shrink-0 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all cursor-pointer btn-press ${
+                !sourceFilter
+                  ? "bg-primary/10 border border-primary text-primary font-semibold hover:bg-primary hover:text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+            >
+              全部
+            </button>
             {enabledSources.map((source) => (
               <button
                 key={source.key}
