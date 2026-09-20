@@ -3,20 +3,43 @@
 import { useRouter } from "next/navigation";
 import { formatTimeRemaining } from "@/lib/util";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MaterialSymbolsPlayArrowRounded } from "@/components/icons";
+
+const UPGRADE_CACHE_TTL = 15 * 60 * 1000;
+const upgradeCache = new Map();
 
 export function ContinueWatching({ playHistory }) {
   const router = useRouter();
   const { videoSources } = useSettingsStore();
   const [updatedEpisodes, setUpdatedEpisodes] = useState({});
 
+  const recentHistory = useMemo(
+    () => (playHistory || []).slice(0, 6),
+    [playHistory],
+  );
+  const historyDependencyKey = useMemo(
+    () =>
+      recentHistory
+        .map((item) => `${item.source}:${item.id}:${item.totalEpisodes}`)
+        .join("|"),
+    [recentHistory],
+  );
+  const sourceUrlDependencyKey = useMemo(
+    () =>
+      videoSources
+        .map((source) => `${source.key}:${source.url}`)
+        .sort()
+        .join("|"),
+    [videoSources],
+  );
+
   useEffect(() => {
-    if (!playHistory || playHistory.length === 0) return;
+    if (recentHistory.length === 0) return;
+
+    let cancelled = false;
 
     const checkUpdates = async () => {
-      // 1. 取前6条记录
-      const recentHistory = playHistory.slice(0, 6);
-
       // 2. 按 source 分组
       const groupedBySource = recentHistory.reduce((acc, item) => {
         if (!acc[item.source]) {
@@ -32,24 +55,35 @@ export function ContinueWatching({ playHistory }) {
       await Promise.all(
         Object.entries(groupedBySource).map(async ([sourceKey, items]) => {
           // 获取该 source 的 API 地址
-          const sourceConfig = videoSources.find(s => s.key === sourceKey);
+          const sourceConfig = videoSources.find((s) => s.key === sourceKey);
           if (!sourceConfig || !sourceConfig.url) return;
 
-          const ids = items.map(item => item.id).join(',');
+          const ids = items.map((item) => item.id).join(",");
+          const cacheKey = `${sourceKey}|${sourceConfig.url}|${ids}`;
+          const cachedEntry = upgradeCache.get(cacheKey);
+          let episodeLengths;
 
           try {
-            const res = await fetch(
-              `/api/upgrade?ids=${ids}&sourceUrl=${sourceConfig.url}`
-            );
-            const data = await res.json();
+            if (cachedEntry && Date.now() - cachedEntry.timestamp < UPGRADE_CACHE_TTL) {
+              episodeLengths = cachedEntry.episodeLengths;
+            } else {
+              const res = await fetch(`/api/upgrade?ids=${ids}&sourceUrl=${sourceConfig.url}`);
+              const data = await res.json();
 
-            // 处理可能的嵌套结构
-            const episodeLengths = data.episodeLength?.episodeLength || data.episodeLength;
+              // 处理可能的嵌套结构
+              episodeLengths = data.episodeLength?.episodeLength || data.episodeLength;
+              if (Array.isArray(episodeLengths)) {
+                upgradeCache.set(cacheKey, {
+                  episodeLengths,
+                  timestamp: Date.now(),
+                });
+              }
+            }
 
             if (Array.isArray(episodeLengths)) {
               // 根据 id 匹配，而不是依赖数组索引顺序
               episodeLengths.forEach(({ id, length }) => {
-                const item = items.find(i => i.id === id);
+                const item = items.find((i) => i.id === id);
                 if (!item) return;
 
                 const currentTotal = item.totalEpisodes || 0;
@@ -62,14 +96,20 @@ export function ContinueWatching({ playHistory }) {
           } catch (error) {
             console.error(`Failed to check updates for source ${sourceKey}:`, error);
           }
-        })
+        }),
       );
 
-      setUpdatedEpisodes(updates);
+      if (!cancelled) {
+        setUpdatedEpisodes(updates);
+      }
     };
 
     checkUpdates();
-  }, [playHistory, videoSources]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [recentHistory, videoSources, historyDependencyKey, sourceUrlDependencyKey]);
 
   if (!playHistory || playHistory.length === 0) {
     return null;
@@ -85,7 +125,15 @@ export function ContinueWatching({ playHistory }) {
   }
 
   function handlePlayClick(record) {
-    router.push(`/play/${record.id}?source=${record.source}`);
+    if (record.source_name === "直链播放") {
+      const params = new URLSearchParams({
+        playerurl: record.source,
+        title: record.title,
+      });
+      router.push(`/direct?${params.toString()}`);
+    } else {
+      router.push(`/play/${record.id}?source=${record.source}`);
+    }
   }
 
   return (
@@ -98,10 +146,10 @@ export function ContinueWatching({ playHistory }) {
       </div>
 
       <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
-        {playHistory.slice(0, 6).map((record) => (
+        {recentHistory.map((record) => (
           <div
             key={`${record.source}-${record.id}`}
-            className="group relative shrink-0 w-[280px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+            className="group relative shrink-0 w-[280px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-primary transition-colors duration-300 cursor-pointer"
             onClick={() => handlePlayClick(record)}
           >
             {updatedEpisodes[`${record.source}-${record.id}`] > 0 && (
@@ -117,25 +165,17 @@ export function ContinueWatching({ playHistory }) {
             <div className="flex gap-4 p-4">
               {/* 海报 */}
               <div className="relative w-24 h-36 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                <img
-                  src={record.poster}
-                  alt={record.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                <img src={record.poster} alt={record.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
 
                 {record.source && (
                   <div className="absolute top-1 left-1 z-10">
-                    <span className="bg-primary/90 text-white text-xs px-2 py-1 rounded-md font-medium shadow-sm">
-                      {record.source_name || record.source}
-                    </span>
+                    <span className="bg-primary/90 text-white text-xs px-2 py-1 rounded-md font-medium shadow-sm">{record.source_name || record.source}</span>
                   </div>
                 )}
                 {/* 播放图标 */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
                   <div className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300">
-                    <span className="material-symbols-outlined text-primary text-2xl ml-0.5">
-                      play_arrow
-                    </span>
+                    <MaterialSymbolsPlayArrowRounded className="text-primary text-2xl ml-0.5" />
                   </div>
                 </div>
               </div>
@@ -143,28 +183,17 @@ export function ContinueWatching({ playHistory }) {
               {/* 信息区域 */}
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div>
-                  <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2 group-hover:text-primary transition-colors">
-                    {record.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mb-1">
-                    {formatEpisodeInfo(record)}
-                  </p>
-                  {record.year && (
-                    <p className="text-xs text-gray-400">{record.year}</p>
-                  )}
+                  <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2 group-hover:text-primary transition-colors">{record.title}</h3>
+                  <p className="text-xs text-gray-500 mb-1">{formatEpisodeInfo(record)}</p>
+                  {record.year && <p className="text-xs text-gray-400">{record.year}</p>}
                 </div>
 
                 {/* 进度条 */}
                 <div className="mt-2">
                   <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{ width: `${Math.min(record.progress, 100)}%` }}
-                    ></div>
+                    <div className="h-full bg-primary transition-all duration-300" style={{ width: `${Math.min(record.progress, 100)}%` }}></div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {Math.floor(record.progress)}%
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1">{Math.floor(record.progress)}%</p>
                 </div>
               </div>
             </div>

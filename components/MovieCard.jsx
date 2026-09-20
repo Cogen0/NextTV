@@ -2,12 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { SpeedTestBadge } from "@/components/SpeedTestBadge";
+import { MaterialSymbolsStarRounded } from "@/components/icons";
 
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useSearchScrollStore } from "@/store/useSearchScrollStore";
 
-export function MovieCard({ movie }) {
+export function MovieCard({ movie, showSpeedTest = true }) {
   const router = useRouter();
   const doubanImageProxy = useSettingsStore((state) => state.doubanImageProxy);
+  const clearScrollPosition = useSearchScrollStore((state) => state.clearScrollPosition);
 
   let douban_image_url = movie.poster;
 
@@ -30,7 +33,8 @@ export function MovieCard({ movie }) {
     if (movie.source) {
       router.push(`/play/${movie.id}?source=${movie.source}`);
     } else {
-      // 如果没有 source（豆瓣卡片），跳转到搜索页面，使用 title 搜索
+      // 豆瓣卡片或红果卡片，跳转到搜索页面，使用 title 搜索
+      clearScrollPosition();
       router.push(`/search?q=${encodeURIComponent(movie.title)}`);
     }
   };
@@ -42,9 +46,7 @@ export function MovieCard({ movie }) {
     >
       <div className="relative w-full aspect-2/3 overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-gray-200 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:ring-primary/50">
         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 z-10">
-          <span className="material-symbols-outlined text-primary text-[14px]">
-            star
-          </span>
+          <MaterialSymbolsStarRounded className="text-primary text-[14px]" />
           {movie.rating}
         </div>
         <div
@@ -52,14 +54,6 @@ export function MovieCard({ movie }) {
           style={{ backgroundImage: `url('${douban_image_url}')` }}
           aria-label={`Poster for ${movie.title}`}
         ></div>
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-          <button className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2 text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 cursor-pointer">
-            <span className="material-symbols-outlined text-[18px]">
-              play_arrow
-            </span>{" "}
-            立即观看
-          </button>
-        </div>
         {movie.source_name && (
           <div className="absolute bottom-2 left-2 z-10">
             <span className="bg-primary/90 text-white text-xs px-2 py-1 rounded-md font-medium shadow-sm">
@@ -81,7 +75,21 @@ export function MovieCard({ movie }) {
             </a>
           </div>
         )}
-        {movie.source && movie.source_url && (
+        {movie.hongguoUrl && (
+          <div className="absolute bottom-2 right-2 z-10">
+            <a
+              href={movie.hongguoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-black/70 hover:bg-black/90 text-white text-xs px-2 py-1 rounded-md transition-colors"
+              title="在红果查看"
+            >
+              🔗 红果
+            </a>
+          </div>
+        )}
+        {showSpeedTest && movie.source && movie.source_url && (
           <SpeedTestBadge
             videoId={movie.id}
             sourceKey={movie.source}

@@ -11,10 +11,16 @@ export function useVideoData(id, source, setCurrentEpisodeIndex) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadData() {
       if (!id || !source) {
-        setError("Missing necessary parameters");
-        setLoading(false);
+        if (!cancelled) {
+          setVideoDetail(null);
+          setDoubanActors([]);
+          setError("Missing necessary parameters");
+          setLoading(false);
+        }
         return;
       }
 
@@ -24,13 +30,21 @@ export function useVideoData(id, source, setCurrentEpisodeIndex) {
         .getState()
         .playHistory.find((item) => item.source === source && item.id === id);
       if (!sourceConfig) {
-        setError("Video source not found");
-        setLoading(false);
+        if (!cancelled) {
+          setVideoDetail(null);
+          setDoubanActors([]);
+          setError("Video source not found");
+          setLoading(false);
+        }
         return;
       }
 
-      setError(null);
-      setLoading(true);
+      if (!cancelled) {
+        setError(null);
+        setLoading(true);
+        setVideoDetail(null);
+        setDoubanActors([]);
+      }
 
       try {
         const videoDetailData = await getVideoDetail(
@@ -39,7 +53,7 @@ export function useVideoData(id, source, setCurrentEpisodeIndex) {
           sourceConfig.name,
           sourceConfig.url,
         );
-
+        const doubanImageProxy = useSettingsStore.getState().doubanImageProxy;
         let actorsData = [];
         if (videoDetailData.douban_id) {
           const doubanResult = await scrapeDoubanDetails(
@@ -48,9 +62,9 @@ export function useVideoData(id, source, setCurrentEpisodeIndex) {
           if (doubanResult.code === 200 && doubanResult.data) {
             actorsData = doubanResult.data.map((actor) => ({
               ...actor,
-              avatar: actor.avatar.replace(
+              avatar: doubanImageProxy === 'server' ? `/api/douban/image?url=${encodeURIComponent(actor.avatar)}` : actor.avatar.replace(
                 /img\d+\.doubanio\.com/g,
-                "img.doubanio.cmliussss.com",
+                doubanImageProxy,
               ),
             }));
           } else {
@@ -62,12 +76,16 @@ export function useVideoData(id, source, setCurrentEpisodeIndex) {
         } else {
           console.log("No Douban ID, cannot get danmaku");
         }
+        if (cancelled) return;
         setCurrentEpisodeIndex(playRecord?.currentEpisodeIndex || 0);
         setVideoDetail(videoDetailData);
         setDoubanActors(actorsData);
         setLoading(false);
       } catch (err) {
+        if (cancelled) return;
         console.error("Failed to load data:", err);
+        setVideoDetail(null);
+        setDoubanActors([]);
         setError("Failed to load data");
         setLoading(false);
       }
@@ -75,6 +93,10 @@ export function useVideoData(id, source, setCurrentEpisodeIndex) {
 
     loadData();
     console.log("数据加载运行了");
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, source, setCurrentEpisodeIndex]);
 
   return {

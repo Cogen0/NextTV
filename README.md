@@ -12,11 +12,11 @@
 
 <div align="center">
 
-![Next.js](https://img.shields.io/badge/Next.js-16.1.1-000?logo=nextdotjs)
-![React](https://img.shields.io/badge/React-19.2.3-61dafb?logo=react)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.18-38bdf8?logo=tailwindcss)
-![ArtPlayer](https://img.shields.io/badge/ArtPlayer-5.3.0-ff6b6b)
-![HLS.js](https://img.shields.io/badge/HLS.js-1.6.15-ec407a)
+![Next.js](https://img.shields.io/badge/Next.js-16.3.3-000?logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19.2.8-61dafb?logo=react)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.3.3-38bdf8?logo=tailwindcss)
+![ArtPlayer](https://img.shields.io/badge/ArtPlayer-5.4.0-ff6b6b)
+![HLS.js](https://img.shields.io/badge/HLS.js-1.7.1-ec407a)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
 
@@ -26,6 +26,7 @@
 
 ## 特性
 
+- 🔒 **密码登录** - 支持密码登录
 - 🎬 **多源视频搜索** - 支持自定义多个视频源 API，聚合搜索电影和电视剧
 - 🎬 **预测速** - 支持自定义多个视频源 API，聚合搜索电影和电视剧
 - 🎥 **高级播放器** - 基于 Artplayer，支持 HLS/M3U8 流媒体播放
@@ -35,10 +36,13 @@
 - 📝 **播放历史** - 自动保存观看进度，随时继续观看
 - ⭐ **收藏管理** - 收藏喜爱的视频，方便快速访问
 - 🎯 **豆瓣推荐** - 集成豆瓣 API，展示热门和高分影视内容
+- 🎯 **红果短剧推荐** - 基于红果短剧数据，展示热门和高分短剧内容
 - 🔗 **自定义豆瓣代理** - 自定义豆瓣 API 代理和图片代理，防止连接问题
 - ⚙️ **灵活配置** - 可视化管理视频源和弹幕源，支持导入导出
 - ⌨️ **快捷键支持** - 丰富的键盘快捷键，提升观看体验
 - 🔔 **首页剧集更新提醒** - 首页继续观看区域展示剧集更新提醒
+- 🔗 **直链播放** - 支持直链播放(尝试使用openlist的链接播放高清视频)，支持 FLV、TS、MP4 等多种格式
+- 🔗 **视频源探索** - 直接探索视频源内容
 
 ---
 
@@ -66,19 +70,19 @@
 
 ### 核心框架
 
-- **Next.js** 16.1.1 - React 服务端渲染框架
-- **React** 19.2.3 - 用户界面构建库
-- **Tailwind CSS** 4.1.18 - 现代化 CSS 框架
+- **Next.js** 16.3.3 - React 服务端渲染框架
+- **React** 19.2.8 - 用户界面构建库
+- **Tailwind CSS** 4.3.3 - 现代化 CSS 框架
 
 ### 播放器相关
 
-- **Artplayer** 5.3.0 - 功能丰富的 HTML5 视频播放器
-- **HLS.js** 1.6.15 - HTTP Live Streaming 支持
-- **artplayer-plugin-danmuku** 5.2.0 - 弹幕插件
+- **Artplayer** 5.4.0 - 功能丰富的 HTML5 视频播放器
+- **HLS.js** 1.7.1 - HTTP Live Streaming 支持
+- **artplayer-plugin-danmuku** 5.3.0 - 弹幕插件
 
 ### 状态管理
 
-- **Zustand** 5.0.10 - 轻量级状态管理库
+- **Zustand** 5.0.15 - 轻量级状态管理库
 
 ---
 
@@ -99,11 +103,19 @@ cd NextTV
 # 安装依赖
 bun install
 
+# 创建.env.local文件并写入以下内容
+SESSION_SECRET=<your secret>
+PASSWORD=<your password>
+
 # 启动开发服务器
 bun dev
 ```
 
 访问 [http://localhost:3000](http://localhost:3000) 查看应用。
+
+也可以通过局域网 HTTP 地址（例如 `http://192.168.0.5:3000`）访问。登录会话的
+Cookie 会根据当前请求协议自动设置：HTTPS 使用 `Secure`，HTTP 不使用
+`Secure`。通过反向代理部署时，请确保代理正确传递 `X-Forwarded-Proto`。
 
 ### 构建生产版本
 
@@ -139,53 +151,46 @@ bun start
 请基于以上两个项目自行搭建弹幕源：
 
 - [danmu_api](https://github.com/SeqCrafter/danmu_api)
-- [fetch_danmu](https://github.com/SeqCrafter/fetch_danmu)
 
-两个项目的请求参数完全一致，大概是这样：
-
-```
-https://<搭建地址>/api/douban?douban_id=36481469&episode_number=1
-```
-
-或者对于`danmu_api`来说
+对于`danmu_api`来说
 
 ```
 https://<搭建地址>/{token}/api/v2/douban?douban_id=36481469&episode_number=1
 ```
 
-在 NextTV 的设置中，弹幕源应该为`?`之前的地址，例如：
+在 NextTV 的设置中，弹幕源应该为`/api`之前的地址，例如：
 
 ```
-https://<搭建地址>/api/douban
+https://<搭建地址>
 ```
 
 或者
 
 ```
-https://<搭建地址>/{token}/api/v2/douban
+https://<搭建地址>/{token}
 ```
 
-### 3. 播放历史
+### 4. 播放历史
 
 - 自动记录观看历史（最多 20 条）
 - 显示观看进度和剧集信息
 - 快速跳转到历史记录
 - 支持删除单条或清空全部历史
 
-### 4. 收藏管理
+### 5. 收藏管理
 
 - 收藏喜爱的影视作品
 - 查看收藏列表
 - 快速访问收藏内容
 
-### 5. 豆瓣推荐
+### 6. 豆瓣推荐
 
 - 首页展示豆瓣热门和高分内容
 - 支持按标签筛选（热门、最新、经典、豆瓣高分等）
 - 自定义标签管理（添加、编辑、删除）
 - 分页浏览推荐内容
 
-### 6. 设置管理
+### 7. 设置管理
 
 - **视频源管理**：
   - 添加/编辑/删除视频源
@@ -198,6 +203,29 @@ https://<搭建地址>/{token}/api/v2/douban
   - 支持多个弹幕源配置
 
 ---
+
+### 8. 导入导出功能
+
+除了手动添加源外，如果你非要添加大量源，可以使用导入功能，格式如下：
+
+```json
+{
+  "videoSources": [
+    {
+      "name": "xx资源",
+      "key": "xxxx",
+      "url": "https://xxxx/api.php/provide/vod",
+      "description": ""
+    }
+  ],
+  "danmakuSources": [
+    {
+      "name": "xxxx",
+      "url": "https://xxxx/api/v2/douban"
+    }
+  ]
+}
+```
 
 ## 快捷键
 
@@ -240,15 +268,21 @@ bun run build
 
 ## 部署方案
 
-### 1. 使用 Vercel 部署
+### 1. 使用 Vercel 部署（推荐）
 
 Fork 项目后，点击 Vercel 按钮即可部署。
+需要设置`SESSION_SECRET`和`PASSWORD`环境变量。
+你可以使用[该网站](https://randomkeygen.com/secret-key)生成`SESSION_SECRET`。
+密码按照你需要设置的设置即可
 
 ### 2. 使用 EdgeOne 部署
 
-Fork 项目后，进入 EdgeOne pages 即可部署。
+添加密码登录功能后不兼容了，无法使用了
 
 ### 3. 其他支持 Next.js 的云函数都可以尝试
+需要设置`SESSION_SECRET`和`PASSWORD`环境变量。
+你可以使用[该网站](https://randomkeygen.com/secret-key)生成`SESSION_SECRET`。
+密码按照你需要设置的设置即可
 
 ## 许可证
 

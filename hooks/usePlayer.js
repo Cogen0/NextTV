@@ -1,12 +1,12 @@
-import {useEffect, useRef, useEffectEvent} from "react";
+import { useEffect, useRef, useEffectEvent } from "react";
 import Artplayer from "artplayer";
 import Hls from "hls.js";
 import artplayerPluginDanmuku from "artplayer-plugin-danmuku";
-import artplayerPluginLiquidGlass from "@/lib/artplayer-plugin-liquid-glass";
-import {useSettingsStore} from "@/store/useSettingsStore";
-import {usePlayHistoryStore} from "@/store/usePlayHistoryStore";
-import {formatTime, CustomHlsJsLoader} from "@/lib/util";
-import {createDanmakuLoader} from "@/lib/danmakuApi";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { usePlayHistoryStore } from "@/store/usePlayHistoryStore";
+import { formatTime, CustomHlsJsLoader } from "@/lib/util";
+import { replaceDanmakuLoader } from "@/lib/artplayerDanmaku";
+import { createDanmakuLoader } from "@/lib/danmakuApi";
 export function usePlayer({
   videoDetail,
   currentEpisodeIndex,
@@ -36,7 +36,7 @@ export function usePlayer({
     if (currentTime < 1 || !duration) return;
 
     try {
-      const {addPlayRecord} = usePlayHistoryStore.getState();
+      const { addPlayRecord } = usePlayHistoryStore.getState();
 
       addPlayRecord({
         source: videoDetail.source,
@@ -69,21 +69,21 @@ export function usePlayer({
       videoDetail.episodes_titles?.[currentEpisodeIndex] ||
       `第 ${currentEpisodeIndex + 1} 集`;
 
-    const {danmakuSources} = useSettingsStore.getState();
+    const { danmakuSources } = useSettingsStore.getState();
     const hasEnabledDanmaku = danmakuSources.some((s) => s.enabled);
 
     if (hasEnabledDanmaku) {
       const isMovie = videoDetail.episodes?.length === 1;
-      artPlayerRef.current.plugins.artplayerPluginDanmuku.config({
-        danmuku: createDanmakuLoader(
+      void replaceDanmakuLoader(
+        artPlayerRef.current.plugins.artplayerPluginDanmuku,
+        createDanmakuLoader(
           danmakuSources,
           videoDetail.douban_id,
           currentTitle,
           currentEpisodeIndex,
           isMovie,
         ),
-      });
-      artPlayerRef.current.plugins.artplayerPluginDanmuku.load();
+      );
       console.log("弹幕加载已触发");
     }
   };
@@ -120,20 +120,20 @@ export function usePlayer({
     console.log("Cleared danmaku");
 
     // 2. 加载弹幕（仅当有启用的弹幕源时）
-    const {danmakuSources} = useSettingsStore.getState();
+    const { danmakuSources } = useSettingsStore.getState();
     const hasEnabledDanmaku = danmakuSources.some((s) => s.enabled);
     if (hasEnabledDanmaku) {
       const isMovie = videoDetail.episodes?.length === 1;
-      artPlayerRef.current.plugins.artplayerPluginDanmuku.config({
-        danmuku: createDanmakuLoader(
+      void replaceDanmakuLoader(
+        artPlayerRef.current.plugins.artplayerPluginDanmuku,
+        createDanmakuLoader(
           danmakuSources,
           videoDetail.douban_id,
           currentTitle,
           currentEpisodeIndex,
           isMovie,
         ),
-      });
-      artPlayerRef.current.plugins.artplayerPluginDanmuku.load();
+      );
       console.log("弹幕加载已触发");
     } else {
       console.log("没有启用的弹幕源，跳过加载弹幕");
@@ -152,6 +152,8 @@ export function usePlayer({
     if (!videoDetail || !artRef.current || artPlayerRef.current) {
       return;
     }
+
+
     try {
       console.log("重新初始化播放器了！");
       const realtimeCurrentEpisodeIndex = CurrentEpisodeIndexEvent();
@@ -162,18 +164,18 @@ export function usePlayer({
         videoDetail?.episodes_titles?.[realtimeCurrentEpisodeIndex] ||
         `第${realtimeCurrentEpisodeIndex + 1}集`;
 
-      const {danmakuSources} = useSettingsStore.getState();
+      const { danmakuSources } = useSettingsStore.getState();
       const hasEnabledDanmaku = danmakuSources.some((s) => s.enabled);
 
       // 根据是否有启用的弹幕源决定是否加载弹幕
       const danmakuLoader = hasEnabledDanmaku
         ? createDanmakuLoader(
-            danmakuSources,
-            videoDetail.douban_id,
-            currentTitle,
-            realtimeCurrentEpisodeIndex,
-            videoDetail.episodes?.length === 1,
-          )
+          danmakuSources,
+          videoDetail.douban_id,
+          currentTitle,
+          realtimeCurrentEpisodeIndex,
+          videoDetail.episodes?.length === 1,
+        )
         : () => Promise.resolve([]);
 
       artPlayerRef.current = new Artplayer({
@@ -211,7 +213,6 @@ export function usePlayer({
         moreVideoAttr: {
           crossOrigin: "anonymous",
         },
-
         plugins: [
           artplayerPluginDanmuku({
             danmuku: danmakuLoader,
@@ -232,7 +233,6 @@ export function usePlayer({
             maxWidth: 400,
             theme: "dark",
           }),
-          artplayerPluginLiquidGlass(),
         ],
 
         customType: {
@@ -405,7 +405,7 @@ export function usePlayer({
             html: "清除跳过配置",
             icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
             onClick: function () {
-              const newConfig = {enable: false, intro_time: 0, outro_time: 0};
+              const newConfig = { enable: false, intro_time: 0, outro_time: 0 };
               useSettingsStore.getState().setSkipConfig(newConfig);
               if (artPlayerRef.current) {
                 artPlayerRef.current.notice.show = "跳过配置已清除";
@@ -417,8 +417,8 @@ export function usePlayer({
 
         controls: [
           {
-            position: "right",
-            index: 10,
+            position: "left",
+            index: 11,
             html: '<button class="art-icon art-icon-next" style="display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>',
             tooltip: "下一集",
             click: () => {
@@ -440,7 +440,7 @@ export function usePlayer({
       artPlayerRef.current.on("ready", () => {
         console.log("播放器就绪");
         // 如果没有启用的弹幕源，初始隐藏弹幕层
-        const {danmakuSources} = useSettingsStore.getState();
+        const { danmakuSources } = useSettingsStore.getState();
         if (!danmakuSources.some((s) => s.enabled)) {
           artPlayerRef.current.plugins.artplayerPluginDanmuku.hide();
         }
@@ -469,7 +469,7 @@ export function usePlayer({
       });
 
       artPlayerRef.current.on("video:timeupdate", () => {
-        const {skipConfig} = useSettingsStore.getState();
+        const { skipConfig } = useSettingsStore.getState();
         // 自动保存数据
         const now = Date.now();
         if (now - lastSaveTimeRef.current > 5000) {
@@ -656,5 +656,5 @@ export function usePlayer({
     };
   }, []);
 
-  return {artRef};
+  return { artRef, artPlayerRef };
 }

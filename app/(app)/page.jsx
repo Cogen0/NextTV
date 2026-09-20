@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { MovieCard } from "@/components/MovieCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { ContinueWatching } from "@/components/ContinueWatching";
@@ -7,10 +7,19 @@ import { SearchBox } from "@/components/SearchBox";
 import { usePlayHistoryStore } from "@/store/usePlayHistoryStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { fetchRecommendations, loadUserTags, saveUserTags, defaultMovieTags, defaultTvTags, convertDoubanToMovie } from "@/lib/doubanApi";
+import {
+  MaterialSymbolsMovieOutlineRounded,
+  MaterialSymbolsTvOutlineRounded,
+  MaterialSymbolsSmartphoneOutline,
+  MaterialSymbolsAdd,
+  MaterialSymbolsChevronLeftRounded,
+  MaterialSymbolsChevronRightRounded,
+  MaterialSymbolsCloseRounded,
+} from "@/components/icons";
 
 export default function Home() {
   const [mediaType, setMediaType] = useState("movie");
-  const [currentTag, setCurrentTag] = useState("热门");
+  const [currentTag, setCurrentTag] = useState("华语");
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -25,34 +34,55 @@ export default function Home() {
   const doubanProxy = useSettingsStore((state) => state.doubanProxy);
 
   useEffect(() => {
-    const { movieTags: loadedMovieTags, tvTags: loadedTvTags } = loadUserTags();
-    setMovieTags(loadedMovieTags);
-    setTvTags(loadedTvTags);
+    async function hydrateUserTags() {
+      await Promise.resolve();
+      const { movieTags: loadedMovieTags, tvTags: loadedTvTags } = loadUserTags();
+      setMovieTags(loadedMovieTags);
+      setTvTags(loadedTvTags);
+    }
+
+    hydrateUserTags();
   }, []);
 
-  const loadMovies = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await fetchRecommendations(mediaType, currentTag, pageSize, page * pageSize, doubanProxy);
-      const converted = data.subjects.map(convertDoubanToMovie);
-      setMovies(converted);
-    } catch (error) {
-      console.error("加载失败:", error);
-      setMovies([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [mediaType, currentTag, page, doubanProxy]);
-
   useEffect(() => {
+    async function loadMovies() {
+      setLoading(true);
+      try {
+        if (mediaType === "short") {
+          const res = await fetch(`/api/hongguo?page_limit=${pageSize}&page_start=${page * pageSize}`);
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || "获取红果短剧推荐失败");
+          }
+          const converted = (data.list || []).map((item) => ({
+            id: item.title,
+            title: item.title,
+            poster: item.poster,
+            rating: "暂无",
+            hongguoUrl: item.hongguoUrl,
+          }));
+          setMovies(converted);
+        } else {
+          const data = await fetchRecommendations(mediaType, currentTag, pageSize, page * pageSize, doubanProxy);
+          const converted = data.subjects.map(convertDoubanToMovie);
+          setMovies(converted);
+        }
+      } catch (error) {
+        console.error("加载失败:", error);
+        setMovies([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     loadMovies();
-  }, [loadMovies]);
+  }, [mediaType, currentTag, page, doubanProxy]);
 
   const handleMediaTypeChange = (type) => {
     setMediaType(type);
     if (type === "movie") {
       setCurrentTag("华语");
-    } else {
+    } else if (type === "tv") {
       setCurrentTag("国产剧");
     }
     setPage(0);
@@ -75,7 +105,9 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const currentTags = mediaType === "movie" ? movieTags : tvTags;
+  const defaultTag = mediaType === "movie" ? "华语" : "国产剧";
+  const rawTags = mediaType === "movie" ? movieTags : mediaType === "tv" ? tvTags : [];
+  const currentTags = rawTags.includes(defaultTag) ? [defaultTag, ...rawTags.filter((t) => t !== defaultTag)] : rawTags;
 
   const handleAddTag = (tagName) => {
     const trimmedTag = tagName.trim();
@@ -140,32 +172,42 @@ export default function Home() {
       <div className="flex flex-col items-center justify-start gap-6 w-full max-w-3xl mx-auto">
         <SearchBox />
 
-        <div className="bg-white p-1.5 rounded-xl inline-flex shadow-sm border border-gray-200">
+        <div className="bg-gray-100 p-1 rounded-lg inline-flex items-center gap-0.5">
           <label className="cursor-pointer relative">
             <input className="peer sr-only" name="media-type" type="radio" value="movie" checked={mediaType === "movie"} onChange={() => handleMediaTypeChange("movie")} />
-            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-md flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">movie</span>
+            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm flex items-center gap-2 transition-all">
+              <MaterialSymbolsMovieOutlineRounded className="text-[18px]" />
               电影
             </div>
           </label>
+          <div className={`w-px h-4 bg-gray-300 ${mediaType === "movie" || mediaType === "tv" ? "opacity-0" : "opacity-100"} transition-opacity`}></div>
           <label className="cursor-pointer relative">
             <input className="peer sr-only" name="media-type" type="radio" value="tv" checked={mediaType === "tv"} onChange={() => handleMediaTypeChange("tv")} />
-            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-md flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">tv</span>
+            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm flex items-center gap-2 transition-all">
+              <MaterialSymbolsTvOutlineRounded className="text-[18px]" />
               电视剧
+            </div>
+          </label>
+          <div className={`w-px h-4 bg-gray-300 ${mediaType === "tv" || mediaType === "short" ? "opacity-0" : "opacity-100"} transition-opacity`}></div>
+          <label className="cursor-pointer relative">
+            <input className="peer sr-only" name="media-type" type="radio" value="short" checked={mediaType === "short"} onChange={() => handleMediaTypeChange("short")} />
+            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm flex items-center gap-2 transition-all">
+              <MaterialSymbolsSmartphoneOutline className="text-[18px]" />
+              短剧
             </div>
           </label>
         </div>
       </div>
 
-      {/* Categories */}
+      {/* Categories - 短剧模式不显示标签 */}
+      {mediaType !== "short" && (
       <div className="w-full overflow-hidden relative group/scroll">
         <div className="flex gap-3 overflow-x-auto hide-scrollbar py-2 px-1">
           <button
             onClick={() => setShowTagModal(true)}
-            className="shrink-0 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer btn-press"
+            className="shrink-0 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer btn-press flex items-center"
           >
-            <span className="material-symbols-outlined text-[16px] align-middle mr-1">add</span>
+            <MaterialSymbolsAdd className="text-[16px] mr-1" />
             管理标签
           </button>
           {currentTags.map((tag) => (
@@ -184,13 +226,14 @@ export default function Home() {
         </div>
         <div className="absolute right-0 top-0 bottom-0 w-24 bg-linear-to-l from-background-light to-transparent pointer-events-none"></div>
       </div>
+      )}
 
       {/* Popular Section */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <span className="w-1 h-6 bg-primary rounded-full"></span>
-            豆瓣热门 - {currentTag}
+            {mediaType === "short" ? "红果短剧 - 热门推荐" : `豆瓣热门 - ${currentTag}`}
           </h2>
 
           {/* Pagination Controls */}
@@ -203,7 +246,7 @@ export default function Home() {
               }`}
               title="上一页"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              <MaterialSymbolsChevronLeftRounded className="text-[20px]" />
             </button>
             <button
               onClick={handleNextPage}
@@ -215,7 +258,7 @@ export default function Home() {
               }`}
               title="下一页"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              <MaterialSymbolsChevronRightRounded className="text-[20px]" />
             </button>
           </div>
         </div>
@@ -247,7 +290,7 @@ export default function Home() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">标签管理 ({mediaType === "movie" ? "电影" : "电视剧"})</h3>
               <button onClick={() => setShowTagModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors btn-press">
-                <span className="material-symbols-outlined">close</span>
+                <MaterialSymbolsCloseRounded />
               </button>
             </div>
 
@@ -264,7 +307,7 @@ export default function Home() {
                     <span>{tag}</span>
                     {tag !== "热门" && (
                       <button onClick={() => handleDeleteTag(tag)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer btn-press">
-                        <span className="material-symbols-outlined text-[16px]">close</span>
+                        <MaterialSymbolsCloseRounded className="text-[16px]" />
                       </button>
                     )}
                   </div>

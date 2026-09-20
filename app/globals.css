@@ -34,42 +34,6 @@
   background-color: var(--color-background-light);
 }
 
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined";
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  font-feature-settings: "liga";
-  -webkit-font-feature-settings: "liga";
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
-.material-symbols-filled {
-  font-family: "Material Symbols Outlined";
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  font-feature-settings: "liga";
-  -webkit-font-feature-settings: "liga";
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -104,72 +68,6 @@
 .selection\:text-white::selection {
   color: white;
 }
-
-/* ============================================
-   ArtPlayer Liquid Glass Plugin Styles
-   毛玻璃效果控制栏插件样式
-   borrow from https://github.com/SzeMeng76/LunaTV
-   ============================================ */
-
-/* 将 CSS 变量定义在基类上，避免控制栏隐藏时变量回退导致的闪烁 */
-.artplayer-plugin-liquid-glass {
-  --art-control-height: 42px;
-  --art-control-icon-size: 24px;
-  --art-control-icon-scale: 1.1;
-}
-
-.artplayer-plugin-liquid-glass.art-control-show .art-bottom {
-  align-items: center;
-  background-image: none;
-  padding-bottom: var(--art-padding);
-}
-
-.artplayer-plugin-liquid-glass.art-control-show .art-bottom .art-liquid-glass {
-  border-radius: 8px;
-  backdrop-filter: blur(12px);
-  background-color: rgba(0, 0, 0, 0.25);
-  padding: var(--art-padding) calc(var(--art-padding) * 1.5) 5px;
-}
-
-.artplayer-plugin-liquid-glass.art-control-show .art-settings {
-  bottom: calc(
-    var(--art-control-height) + var(--art-bottom-gap) + var(--art-padding)
-  );
-}
-
-.artplayer-plugin-liquid-glass.art-control-show .art-layer-auto-playback {
-  bottom: calc(
-    var(--art-control-height) + var(--art-bottom-gap) + var(--art-padding) * 4 +
-      10px
-  );
-}
-
-/* 让按钮可自动缩小，防止溢出 */
-.artplayer-plugin-liquid-glass .art-control {
-  flex-shrink: 1 !important;
-  min-width: 32px !important;
-  padding: 0 6px !important;
-}
-
-/* 🔑 关键：完全按照官方CSS，不设置width让容器自适应 */
-.artplayer-plugin-liquid-glass .art-bottom {
-  align-items: center; /* 官方唯一的对齐设置 */
-}
-
-/* 移动端优化 */
-@media (max-width: 768px) {
-  .artplayer-plugin-liquid-glass .art-control {
-    padding: 0 4px !important;
-    min-width: 28px !important;
-  }
-}
-
-/* ============================================
-   ArtPlayer Controls Styles
-   控制栏样式 - 模块化重构版
-   ⚠️ 重要：保留所有 !important 确保正确覆盖
-   borrow from https://github.com/SzeMeng76/LunaTV
-   ============================================ */
 
 /* ===== Poster (封面图) ===== */
 .art-poster {
@@ -221,12 +119,16 @@
     opacity: 1 !important;
     transform: translateY(0) !important;
     pointer-events: auto !important;
-    transition: opacity 0.15s ease 0.1s, transform 0.15s ease 0.1s !important;
+    transition:
+      opacity 0.15s ease 0.1s,
+      transform 0.15s ease 0.1s !important;
   }
 
   /* 音量面板默认隐藏状态 */
   .art-volume-panel {
-    transition: opacity 0.15s ease 0.3s, transform 0.15s ease 0.3s !important;
+    transition:
+      opacity 0.15s ease 0.3s,
+      transform 0.15s ease 0.3s !important;
   }
 }
 
@@ -271,33 +173,52 @@
   .art-control-volume {
     display: none !important;
   }
-}
 
-/* ===== Small Screen (Mobile Portrait) ===== */
-@media (max-width: 380px) {
+  /* PiP 在移动端优先级低，隐藏以防溢出 */
   .art-control-pip {
     display: none !important;
   }
-  .art-control-control9 {
-    display: none !important;
-  }
-  /* 减小控制按钮的间距和尺寸，确保完整显示 */
-  .art-controls button,
-  .art-control {
-    min-width: 28px !important;
-    padding: 0 4px !important;
-    font-size: 13px !important;
+
+  /* 防止控件栏溢出 */
+  .art-controls {
+    overflow: hidden !important;
   }
 
-  /* 减小控制栏的内边距 */
-  .art-controls {
+  .art-controls-right {
+    overflow: hidden !important;
+    flex-shrink: 1 !important;
+  }
+
+  /* 减小控制按钮的间距，确保完整显示 */
+  .art-controls button,
+  .art-control {
+    min-width: 32px !important;
     padding: 0 4px !important;
   }
 
   /* 确保全屏按钮始终可见 */
   .art-control-fullscreen {
     display: flex !important;
-    min-width: 32px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* ===== Small Screen (Mobile Portrait) ===== */
+@media (max-width: 380px) {
+  .art-control-control9 {
+    display: none !important;
+  }
+  /* 进一步减小控制按钮的间距和尺寸 */
+  .art-controls button,
+  .art-control {
+    min-width: 28px !important;
+    padding: 0 3px !important;
+    font-size: 13px !important;
+  }
+
+  /* 减小控制栏的内边距 */
+  .art-controls {
+    padding: 0 4px !important;
   }
 
   /* 调整播放器时间显示更紧凑 */
@@ -461,7 +382,9 @@
 
 /* ===== Button Micro-interactions ===== */
 .btn-press {
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .btn-press:active {
@@ -514,7 +437,9 @@ input:checked + .media-toggle-btn .material-symbols-outlined {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
   transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  transition:
+    width 0.6s,
+    height 0.6s;
 }
 
 .btn-ripple:active::after {
@@ -551,8 +476,8 @@ html {
 
 /* ===== Focus Visible Enhancement ===== */
 *:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: 1px solid var(--color-primary);
+  outline-offset: -1px;
   border-radius: 4px;
 }
 
@@ -570,4 +495,128 @@ html {
 
 .dropdown-enter {
   animation: dropdownSlideDown 0.2s ease-out;
+}
+
+/* ===== Danmaku Search Modal ===== */
+.danmaku-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: modalBackdropFadeIn 0.2s ease-out;
+}
+
+.danmaku-modal-content {
+  position: relative;
+  width: 90vw;
+  max-width: 480px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalContentScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.danmaku-modal-content > .danmaku-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.danmaku-modal-content > .danmaku-modal-body > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.danmaku-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.danmaku-modal-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #475569;
+}
+
+:is(.dark) .danmaku-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+/* "弹" button styles */
+.danmaku-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  line-height: 1;
+  position: relative;
+}
+
+.danmaku-trigger-btn:hover {
+  color: var(--color-primary);
+  background: rgba(250, 198, 56, 0.1);
+}
+
+.danmaku-trigger-btn:active {
+  transform: scale(0.92);
+}
+
+@media (max-width: 768px) {
+  .danmaku-modal-content {
+    width: 92vw;
+    max-height: 70vh;
+  }
+}
+
+/* ===== Login Shake Animation ===== */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  50%,
+  90% {
+    transform: translateX(-4px);
+  }
+  30%,
+  70% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }

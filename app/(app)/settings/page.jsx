@@ -2,27 +2,29 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import {
+  MaterialSymbolsArrowUpwardRounded,
+  MaterialSymbolsArrowDownwardRounded,
+  MaterialSymbolsEditSquareOutline,
+  MaterialSymbolsDeleteOutlineRounded,
+  MaterialSymbolsAdd,
+  MaterialSymbolsSearchRounded,
+  MaterialSymbolsUploadFileOutlineRounded,
+  MaterialSymbolsDownload2Outline,
+  MaterialSymbolsCloseRounded,
+  MaterialSymbolsCheckRounded,
+  MaterialSymbolsExpandMoreRounded,
+  MaterialSymbolsChevronRightRounded,
+} from "@/components/icons";
 
-const SourceItem = ({
-  source,
-  type,
-  index,
-  totalCount,
-  toggleSource,
-  onEdit,
-  onDelete,
-  onMoveUp,
-  onMoveDown,
-}) => {
+const SourceItem = ({ source, type, index, totalCount, toggleSource, onEdit, onDelete, onMoveUp, onMoveDown }) => {
   const canMoveUp = index > 0;
   const canMoveDown = index < totalCount - 1;
 
   return (
     <div
       className={`group flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 bg-white border rounded-2xl hover:shadow-card transition-all duration-200 gap-3 md:gap-4 ${
-        source.enabled
-          ? "border-blue-100 hover:border-blue-200"
-          : "border-gray-100 hover:border-gray-200"
+        source.enabled ? "border-blue-100 hover:border-blue-200" : "border-gray-100 hover:border-gray-200"
       }`}
     >
       <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0 overflow-hidden">
@@ -41,18 +43,12 @@ const SourceItem = ({
           />
           <label
             htmlFor={`toggle-${source.id}`}
-            className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-              source.enabled ? "bg-primary" : "bg-gray-300"
-            }`}
+            className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ${source.enabled ? "bg-primary" : "bg-gray-300"}`}
           ></label>
         </div>
         <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-          <span className="font-bold text-gray-900 text-sm md:text-lg truncate">
-            {source.name}
-          </span>
-          <span className="text-xs md:text-sm text-gray-500 truncate font-mono">
-            {source.url}
-          </span>
+          <span className="font-bold text-gray-900 text-sm md:text-lg truncate">{source.name}</span>
+          <span className="text-xs md:text-sm text-gray-500 truncate font-mono">{source.url}</span>
         </div>
       </div>
       <div className="flex items-center gap-1 md:gap-2 md:pl-4 justify-end md:justify-start shrink-0">
@@ -60,47 +56,35 @@ const SourceItem = ({
           onClick={() => onMoveUp(source.id)}
           disabled={!canMoveUp}
           className={`min-h-[44px] w-10 md:w-auto p-2 rounded-full transition-all duration-300 ${
-            canMoveUp
-              ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
-              : "text-gray-200 cursor-not-allowed"
+            canMoveUp ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer" : "text-gray-200 cursor-not-allowed"
           }`}
           aria-label="向上移动"
         >
-          <span className="material-symbols-outlined text-[18px] md:text-[20px]">
-            arrow_upward
-          </span>
+          <MaterialSymbolsArrowUpwardRounded className="text-[18px] md:text-[20px]" />
         </button>
         <button
           onClick={() => onMoveDown(source.id)}
           disabled={!canMoveDown}
           className={`min-h-[44px] w-10 md:w-auto p-2 rounded-full transition-all duration-300 ${
-            canMoveDown
-              ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
-              : "text-gray-200 cursor-not-allowed"
+            canMoveDown ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer" : "text-gray-200 cursor-not-allowed"
           }`}
           aria-label="向下移动"
         >
-          <span className="material-symbols-outlined text-[18px] md:text-[20px]">
-            arrow_downward
-          </span>
+          <MaterialSymbolsArrowDownwardRounded className="text-[18px] md:text-[20px]" />
         </button>
         <button
           onClick={() => onEdit(source)}
           className="min-h-[44px] w-10 md:w-auto p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-300 cursor-pointer"
           aria-label="编辑"
         >
-          <span className="material-symbols-outlined text-[18px] md:text-[20px]">
-            edit_square
-          </span>
+          <MaterialSymbolsEditSquareOutline className="text-[18px] md:text-[20px]" />
         </button>
         <button
           onClick={() => onDelete(source.id)}
           className="min-h-[44px] w-10 md:w-auto p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all duration-300 cursor-pointer"
           aria-label="删除"
         >
-          <span className="material-symbols-outlined text-[18px] md:text-[20px]">
-            delete
-          </span>
+          <MaterialSymbolsDeleteOutlineRounded className="text-[18px] md:text-[20px]" />
         </button>
       </div>
     </div>
@@ -132,25 +116,16 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   if (!shouldRender) return null;
 
   return (
-    <div
-      className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-out ${
-        isAnimating ? "opacity-100" : "opacity-0"
-      }`}
-    >
+    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-out ${isAnimating ? "opacity-100" : "opacity-0"}`}>
       <div
         className={`bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out ${
-          isAnimating
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-95 translate-y-4"
+          isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
         }`}
       >
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <span className="material-symbols-outlined">close</span>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+            <MaterialSymbolsCloseRounded />
           </button>
         </div>
         <div className="p-6">{children}</div>
@@ -187,20 +162,12 @@ const CustomSelect = ({ value, onChange, options, label }) => {
         }`}
       >
         <span className="truncate mr-2 font-medium">{selectedOption.label}</span>
-        <span
-          className={`material-symbols-outlined text-gray-500 transition-transform duration-300 ease-in-out ${
-            isOpen ? "rotate-180 text-primary" : ""
-          }`}
-        >
-          expand_more
-        </span>
+        <MaterialSymbolsExpandMoreRounded className={`text-gray-500 transition-transform duration-300 ease-in-out ${isOpen ? "rotate-180 text-primary" : ""}`} />
       </button>
 
       <div
         className={`absolute z-20 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden transform transition-all duration-200 ease-out origin-top ${
-          isOpen
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+          isOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
         }`}
       >
         <div className="max-h-60 overflow-y-auto py-1">
@@ -213,15 +180,11 @@ const CustomSelect = ({ value, onChange, options, label }) => {
                 setIsOpen(false);
               }}
               className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 flex items-center justify-between ${
-                option.value === value
-                  ? "bg-primary/5 text-primary font-semibold"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                option.value === value ? "bg-primary/5 text-primary font-semibold" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
               <span>{option.label}</span>
-              {option.value === value && (
-                <span className="material-symbols-outlined text-[18px]">check</span>
-              )}
+              {option.value === value && <MaterialSymbolsCheckRounded className="text-[18px]" />}
             </button>
           ))}
         </div>
@@ -346,9 +309,7 @@ export default function Settings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `streambox-settings-${
-      new Date().toISOString().split("T")[0]
-    }.json`;
+    a.download = `streambox-settings-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -380,17 +341,9 @@ export default function Settings() {
   };
 
   // Filter sources based on search
-  const filteredVideoSources = videoSources.filter(
-    (source) =>
-      source.name.toLowerCase().includes(searchVideo.toLowerCase()) ||
-      source.url.toLowerCase().includes(searchVideo.toLowerCase())
-  );
+  const filteredVideoSources = videoSources.filter((source) => source.name.toLowerCase().includes(searchVideo.toLowerCase()) || source.url.toLowerCase().includes(searchVideo.toLowerCase()));
 
-  const filteredDanmakuSources = danmakuSources.filter(
-    (source) =>
-      source.name.toLowerCase().includes(searchDanmaku.toLowerCase()) ||
-      source.url.toLowerCase().includes(searchDanmaku.toLowerCase())
-  );
+  const filteredDanmakuSources = danmakuSources.filter((source) => source.name.toLowerCase().includes(searchDanmaku.toLowerCase()) || source.url.toLowerCase().includes(searchDanmaku.toLowerCase()));
 
   const doubanProxyOptions = [
     { value: "https://movie.douban.com", label: "直连 (movie.douban.com)" },
@@ -404,17 +357,14 @@ export default function Settings() {
     { value: "img.doubanio.cmliussss.com", label: "阿里云 CDN (cmliussss.com)" },
   ];
 
-
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* Video Sources */}
       <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-6 border border-gray-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">视频源管理</h2>
-            <p className="text-gray-500 mt-1">
-              管理视频来源，调整优先级和启用状态
-            </p>
+            <h2 className="text-xl font-bold text-gray-900">视频源管理</h2>
+            <p className="text-gray-500 mt-1">管理视频来源，调整优先级和启用状态</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <button
@@ -427,21 +377,17 @@ export default function Settings() {
               onClick={() => openVideoModal()}
               className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">
-                add
-              </span>
+              <MaterialSymbolsAdd className="text-sm font-bold" />
               添加源
             </button>
           </div>
         </div>
         <div className="relative mt-6 mb-6">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="material-symbols-outlined text-gray-400">
-              search
-            </span>
+            <MaterialSymbolsSearchRounded className="text-gray-400" />
           </div>
           <input
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm shadow-sm transition-shadow"
+            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 sm:text-sm "
             placeholder="搜索源..."
             type="text"
             value={searchVideo}
@@ -470,31 +416,21 @@ export default function Settings() {
       <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-8 border border-gray-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">豆瓣配置</h2>
+            <h2 className="text-xl font-bold text-gray-900">豆瓣配置</h2>
             <p className="text-gray-500 mt-1">配置豆瓣 API 和图片代理以防止连接问题</p>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">豆瓣 API 代理</label>
-            <CustomSelect
-              value={doubanProxy}
-              onChange={setDoubanProxy}
-              options={doubanProxyOptions}
-              label="豆瓣 API 代理"
-            />
+            <CustomSelect value={doubanProxy} onChange={setDoubanProxy} options={doubanProxyOptions} label="豆瓣 API 代理" />
             <p className="text-xs text-gray-500">选择用于获取豆瓣数据的接口地址</p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">豆瓣图片代理</label>
-            <CustomSelect
-              value={doubanImageProxy}
-              onChange={setDoubanImageProxy}
-              options={doubanImageProxyOptions}
-              label="豆瓣图片代理"
-            />
+            <CustomSelect value={doubanImageProxy} onChange={setDoubanImageProxy} options={doubanImageProxyOptions} label="豆瓣图片代理" />
             <p className="text-xs text-gray-500">选择用于加载电影海报的图片代理</p>
           </div>
         </div>
@@ -504,7 +440,7 @@ export default function Settings() {
       <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-8 border border-gray-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">弹幕源管理</h2>
+            <h2 className="text-xl font-bold text-gray-900">弹幕源管理</h2>
             <p className="text-gray-500 mt-1">配置弹幕接口，丰富观影体验（最多支持 1 个弹幕源）</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -518,21 +454,17 @@ export default function Settings() {
               onClick={() => openDanmakuModal()}
               className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">
-                add
-              </span>
+              <MaterialSymbolsAdd className="text-sm font-bold" />
               添加源
             </button>
           </div>
         </div>
         <div className="relative mt-6 mb-6">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="material-symbols-outlined text-gray-400">
-              search
-            </span>
+            <MaterialSymbolsSearchRounded className="text-gray-400" />
           </div>
           <input
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm shadow-sm transition-shadow"
+            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 sm:text-sm"
             placeholder="搜索弹幕源..."
             type="text"
             value={searchDanmaku}
@@ -560,10 +492,8 @@ export default function Settings() {
       {/* Data Management */}
       <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-8 border border-gray-100">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">数据管理</h2>
-          <p className="text-gray-500 mt-1">
-            导入或导出您的所有设置、源和播放历史
-          </p>
+          <h2 className="text-xl font-bold text-gray-900">数据管理</h2>
+          <p className="text-gray-500 mt-1">导入或导出您的所有设置、源和播放历史</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
@@ -572,20 +502,14 @@ export default function Settings() {
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300">
-                <span className="material-symbols-outlined text-2xl">
-                  upload_file
-                </span>
+                <MaterialSymbolsUploadFileOutlineRounded className="text-2xl" />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">导入配置</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  从 JSON 文件恢复数据
-                </p>
+                <p className="text-sm text-gray-500 mt-1">从 JSON 文件恢复数据</p>
               </div>
             </div>
-            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-all duration-300">
-              chevron_right
-            </span>
+            <MaterialSymbolsChevronRightRounded className="text-gray-400 group-hover:text-primary transition-all duration-300" />
           </button>
           <button
             onClick={handleExport}
@@ -593,86 +517,62 @@ export default function Settings() {
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                <span className="material-symbols-outlined text-2xl">
-                  download
-                </span>
+                <MaterialSymbolsDownload2Outline className="text-2xl" />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">导出配置</h3>
                 <p className="text-sm text-gray-500 mt-1">备份当前数据到本地</p>
               </div>
             </div>
-            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-all duration-300">
-              chevron_right
-            </span>
+            <MaterialSymbolsChevronRightRounded className="text-gray-400 group-hover:text-primary transition-all duration-300" />
           </button>
         </div>
       </section>
 
       {/* Video Source Modal */}
-      <Modal
-        isOpen={showVideoModal}
-        onClose={() => setShowVideoModal(false)}
-        title={editingSource ? "编辑视频源" : "添加视频源"}
-      >
+      <Modal isOpen={showVideoModal} onClose={() => setShowVideoModal(false)} title={editingSource ? "编辑视频源" : "添加视频源"}>
         <form onSubmit={handleVideoSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              名称 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">名称 *</label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               placeholder="例如：资源站A"
               value={videoForm.name}
-              onChange={(e) =>
-                setVideoForm({ ...videoForm, name: e.target.value })
-              }
+              onChange={(e) => setVideoForm({ ...videoForm, name: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Key *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Key *</label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               placeholder="例如：source_a"
               value={videoForm.key}
-              onChange={(e) =>
-                setVideoForm({ ...videoForm, key: e.target.value })
-              }
+              onChange={(e) => setVideoForm({ ...videoForm, key: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">URL *</label>
             <input
               type="url"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               placeholder="https://api.example.com/vod"
               value={videoForm.url}
-              onChange={(e) =>
-                setVideoForm({ ...videoForm, url: e.target.value })
-              }
+              onChange={(e) => setVideoForm({ ...videoForm, url: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              描述
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none"
               placeholder="可选的描述信息"
               rows="3"
               value={videoForm.description}
-              onChange={(e) =>
-                setVideoForm({ ...videoForm, description: e.target.value })
-              }
+              onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
             />
           </div>
           <div className="flex gap-3 pt-4">
@@ -683,10 +583,7 @@ export default function Settings() {
             >
               取消
             </button>
-            <button
-              type="submit"
-              className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-            >
+            <button type="submit" className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
               {editingSource ? "保存" : "添加"}
             </button>
           </div>
@@ -694,40 +591,28 @@ export default function Settings() {
       </Modal>
 
       {/* Danmaku Source Modal */}
-      <Modal
-        isOpen={showDanmakuModal}
-        onClose={() => setShowDanmakuModal(false)}
-        title={editingSource ? "编辑弹幕源" : "添加弹幕源"}
-      >
+      <Modal isOpen={showDanmakuModal} onClose={() => setShowDanmakuModal(false)} title={editingSource ? "编辑弹幕源" : "添加弹幕源"}>
         <form onSubmit={handleDanmakuSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              名称 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">名称 *</label>
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               placeholder="例如：弹幕库A"
               value={danmakuForm.name}
-              onChange={(e) =>
-                setDanmakuForm({ ...danmakuForm, name: e.target.value })
-              }
+              onChange={(e) => setDanmakuForm({ ...danmakuForm, name: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">URL *</label>
             <input
               type="url"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
               placeholder="https://api.example.com/danmaku"
               value={danmakuForm.url}
-              onChange={(e) =>
-                setDanmakuForm({ ...danmakuForm, url: e.target.value })
-              }
+              onChange={(e) => setDanmakuForm({ ...danmakuForm, url: e.target.value })}
             />
           </div>
           <div className="flex gap-3 pt-4">
@@ -738,10 +623,7 @@ export default function Settings() {
             >
               取消
             </button>
-            <button
-              type="submit"
-              className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-            >
+            <button type="submit" className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
               {editingSource ? "保存" : "添加"}
             </button>
           </div>
