@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   reactStrictMode: false,
   reactCompiler: true,
-  output: "standalone",
+  output: process.env.VERCEL ? undefined : "standalone",
   // 明确指定 Turbopack 的工作区根目录，避免被父目录的 lockfile 误导
   turbopack: {
     root: __dirname, // 使用绝对路径指向项目根目录
